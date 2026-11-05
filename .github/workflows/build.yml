@@ -1,0 +1,25 @@
+name: Build IPA
+on:
+  workflow_dispatch:
+  push:
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: xcodegen generate
+      - name: Build
+        run: |
+          xcodebuild -project TapGame.xcodeproj -scheme TapGame -configuration Release \
+            -sdk iphoneos -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+      - name: Package IPA
+        run: |
+          mkdir Payload
+          cp -r build/Build/Products/Release-iphoneos/TapGame.app Payload/
+          zip -r TapGame.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TapGame-ipa
+          path: TapGame.ipa
